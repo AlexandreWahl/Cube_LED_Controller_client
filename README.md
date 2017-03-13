@@ -1,3 +1,0 @@
-# Controller cube LED
-
-Blablabla
