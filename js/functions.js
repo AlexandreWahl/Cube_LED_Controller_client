@@ -35,19 +35,22 @@ function startCubeRotation() {
     rotateStatus = true;
 }
 
-
+// Fonction permettant d'obtenir le statut de l'affichage des axes
 function getAxesStatus() {
     return statusShowAxes;
 }
 
+// Fonction permettant de cacher les axes
 function hideAxes() {
     statusShowAxes = false;
 }
 
+// Fonction permettant d'afficher les axes
 function showAxes() {
     statusShowAxes = true;
 }
 
+// Fonction permettant de changer le status de statusShowAxes
 function checkAxes(value) {
     if(value)
         showAxes();
@@ -61,7 +64,7 @@ function resetCube() {
     rotateStatus = false;
 }
 
-// TODO
+// Fonction permettant la suppresion d'une fonction dans l'éditeur de séquences
 function deleteFonction(obj) {
     obj.parent().parent().remove();
 }
@@ -75,6 +78,7 @@ function printSequences() {
 
         $("#divControls").append('<div id="divSequences"></div>');
         $("#divButtons").append('<input class="buttonsControls" id="buttonNewSeq" type="button" onclick="clickButtonNewSequence()" value="Créer une séquence" />');
+
         for(var i = 0;i< data.length;i++) {
             $("#divSequences").append('<div class="divSequence" id="sequenceNo' + data[i].numero +'"><div id="nameSequence" >' + data[i].nom + '</div>' +
                 '<div id="buttonSequence"><button class="buttonSequences buttonEditSequence" id="buttonEditSequence' + data[i].numero + '" onclick="getInfosSequence(' + data[i].numero + ')" value=""><a><i class="fa fa-pencil-square-o"></i></a></button>' +
@@ -151,7 +155,7 @@ function getInfosSequence(id) {
         setTitle(aSequence.nom);
         divButtons.append('<input class="buttonsControls" id="buttonCancel" type="button" onclick="printSequences()" value="Annuler" />');
         divButtons.append('<input class="buttonsControls" id="buttonValidate" type="button" onclick="validateFonctions(' + id + ')" value="Valider" />');
-        divButtons.append('<input class="buttonsControls" id="buttonCubeEditor" type="button" onclick="cubeEditor(' + id + ')" value="Cube Editor" />');
+        divButtons.append('<input class="buttonsControls" id="buttonCubeEditor" type="button" onclick="cubeEditor(' + id + ')" value="Editer le cube" />');
 
         divControls.append('' +
             '<div class="divAddSeq" id="divNewSeqFunc">' +
@@ -295,7 +299,7 @@ function cubeEditor(numero) {
 
     var divButtons =  $("#divButtons");
     var divControls =  $("#divControls");
-    setTitle("Cube Editor");
+    setTitle("Editeur du cube");
 
     divButtons.append('<input class="buttonsControls" id="buttonCancelEditor" type="button" onclick="getInfosSequence(' + numero + ')" value="Annuler" />');
     divButtons.append('<input class="buttonsControls" id="buttonValidateEditor" type="button" onclick="validateEditor(' + numero + ')" value="Valider" />');
@@ -324,10 +328,38 @@ function cubeEditor(numero) {
         $('#tableLed').append('<tr id="' + i + '">');
         for(var j= 0;j<number;j++) {
             $('#tableLed').append('<td id="' + i + '-' + j + '"></td>');
-            $('#' + i + '-' + j).click(function(e, i, j){
+
+            var isDownRight = false;
+            var isDownLeft = false;
+
+            $($(this)).mousedown(function(e) {
+                if(e.button == 2) {
+                    isDownRight = true;
+                } else if(e.button == 0) {
+                    isDownLeft = true;
+                }
+            }).mouseup(function(e) {
+                if(e.button == 2) {
+                    isDownRight = false;
+                } else if(e.button == 0) {
+                    isDownLeft = false;
+                }
+            });
+
+
+            $('#' + i + '-' + j).click(function(){
                 var color = $('.inputCubeEditor').find("select[name='selectTypeColor']").find(":selected").val();
                 $(this).css("background-color", color);
-                e.stopPropagation();
+            }).mouseover(function(){
+                if(isDownLeft) {
+                    var color = $('.inputCubeEditor').find("select[name='selectTypeColor']").find(":selected").val();
+                    $(this).css("background-color", color);
+                } else if(isDownRight) {
+                    $(this).css("background-color", "");
+                }
+            }).contextmenu(function(){
+                $(this).css("background-color", "");
+                return false;
             });
         }
         $('#tableLed').append('<tr>');
@@ -347,36 +379,44 @@ function cubeEditor(numero) {
 
 // TODO
 function validateEditor(numero) {
-    console.log("Validate editor");
+    var color = "";
+
+    for(var x = 0;x < number;x++) {
+        for (var y = 0; y < number; y++) {
+            for (var z = 0; z < number; z++) {
+                color =  leds[x][y][z].getColor();
+                console.log(color);
+                if(color != "") {
+                    // reqAddFonctionsIDSequence(numero, 4, 3, [x, y, z, color]);
+                }
+            }
+        }
+    }
+
+    getInfosSequence(numero);
 }
 
 // TODO
 function validateArray() {
     for(var i= 0;i<number;i++) {
         for(var j= 0;j<number;j++) {
-            var color = $('#' + i + '-' + j).css("background-color");
+            var color = rgbToString($('#' + i + '-' + j).css("background-color"));
             var axe = $('.inputCubeEditor').find("select[name='selectTypeAxe']").find(":selected").val();
             var layer = $('.inputCubeEditor').find("select[name='selectTypeLayer']").find(":selected").val();
 
             if(axe != "" && layer != "") {
-                if(axe == "x") {
-                    if (color == 'rgba(0, 0, 0, 0)') {
-                        leds[layer][i][j].turnOff();
-                    } else {
-                        leds[layer][i][j].setColor(color);
-                    }
-                } else if(axe == "y") {
-                    if (color == 'rgba(0, 0, 0, 0)') {
-                        leds[i][layer][j].turnOff();
-                    } else {
-                        leds[i][layer][j].setColor(color);
-                    }
-                } else if(axe == "z") {
-                    if (color == 'rgba(0, 0, 0, 0)') {
-                        leds[i][j][layer].turnOff();
-                    } else {
-                        leds[i][j][layer].setColor(color);
-                    }
+                switch(axe){
+                    case "x" :
+                        color == "" ? leds[layer][i][j].turnOff() : leds[layer][i][j].setColor(color);
+                        break;
+                    case "y" :
+                        color == "" ? leds[i][layer][j].turnOff() : leds[i][layer][j].setColor(color);
+                        break;
+                    case "z" :
+                        color == "" ? leds[i][j][layer].turnOff() : leds[i][j][layer].setColor(color);
+                        break;
+                    default :
+                        break;
                 }
             }
         }
@@ -398,11 +438,10 @@ function getArray() {
                 color = leds[i][j][layer].getColor();
             }
 
-
-            if(color.r == 1 && color.g == 1 && color.b == 1) {
+            if(color == "") {
                 $('#' + i + '-' + j).css("background-color", "");
             } else {
-                $('#' + i + '-' + j).css("background-color", "rgba("+color.r*255+","+color.g*255+"," +color.b*255+", 1)");
+                $('#' + i + '-' + j).css("background-color", color);
             }
         }
     }
@@ -461,6 +500,7 @@ function fnRotateLayer(sens) {
     var layer = $('.inputCubeEditor').find("select[name='selectTypeLayer']").find(":selected").val();
 
     var layer0 = [];
+    var prime = "";
 
     for(var i=0;i<number;i++) {
         layer0[i] = [];
@@ -475,130 +515,95 @@ function fnRotateLayer(sens) {
         }
     }
 
-    if(sens == "droite") {
-        for(var i=0;i<number;i++) {
-            for(var j=0;j<number;j++) {
-                var prime = number-1-j;
-                if(axe == "x") {
-                    if(layer0[j][i].r == 1 && layer0[j][i].g == 1 && layer0[j][i].b == 1) {
-                        leds[layer][i][prime].turnOff();
-                        $('#' + i + '-' + prime).css("background-color", "");
-                    } else {
-                        leds[layer][i][prime].setColor("rgba(" + layer0[j][i].r * 255 + "," + layer0[j][i].g * 255 + "," + layer0[j][i].b * 255 + ", 1)");
-                        $('#' + i + '-' + prime).css("background-color", "rgba(" + layer0[j][i].r * 255 + "," + layer0[j][i].g * 255 + "," + layer0[j][i].b * 255 + ", 1)");
+    if(axe != "" && layer != "") {
+        if (sens == "droite") {
+            for (var i = 0; i < number; i++) {
+                for (var j = 0; j < number; j++) {
+                    prime = number - 1 - j;
+                    switch (axe) {
+                        case "x" :
+                            setColorEditor(leds[layer][i][prime], $('#' + i + '-' + prime), layer0[j][i]);
+                            break;
+                        case "y" :
+                            setColorEditor(leds[i][layer][prime], $('#' + i + '-' + prime), layer0[j][i]);
+                            break;
+                        case "z" :
+                            setColorEditor(leds[i][prime][layer], $('#' + i + '-' + prime), layer0[j][i]);
+                            break;
+                        default :
+                            break;
                     }
-                } else if(axe == "y") {
-                    if(layer0[j][i].r == 1 && layer0[j][i].g == 1 && layer0[j][i].b == 1) {
-                        leds[i][layer][prime].turnOff();
-                        $('#' + i + '-' + prime).css("background-color", "");
-                    } else {
-                        leds[i][layer][prime].setColor("rgba("+layer0[j][i].r*255+","+layer0[j][i].g*255+"," +layer0[j][i].b*255+", 1)");
-                        $('#' + i + '-' + prime).css("background-color", "rgba(" + layer0[j][i].r * 255 + "," + layer0[j][i].g * 255 + "," + layer0[j][i].b * 255 + ", 1)");
+                }
+            }
+        } else if (sens == "gauche") {
+            for (var i = 0; i < number; i++) {
+                for (var j = 0; j < number; j++) {
+                    prime = number - 1 - i;
+                    switch (axe) {
+                        case "x" :
+                            setColorEditor(leds[layer][prime][j], $('#' + prime + '-' + j), layer0[j][i]);
+                            break;
+                        case "y" :
+                            setColorEditor(leds[prime][layer][j], $('#' + prime + '-' + j), layer0[j][i]);
+                            break;
+                        case "z" :
+                            setColorEditor(leds[i][prime][layer], $('#' + prime + '-' + j), layer0[j][i]);
+                            break;
+                        default :
+                            break;
                     }
-                } else if(axe == "z") {
-                    if(layer0[j][i].r == 1 && layer0[j][i].g == 1 && layer0[j][i].b == 1) {
-                        leds[i][prime][layer].turnOff();
-                        $('#' + i + '-' + prime).css("background-color", "");
-                    } else {
-                        leds[i][prime][layer].setColor("rgba("+layer0[j][i].r*255+","+layer0[j][i].g*255+"," +layer0[j][i].b*255+", 1)");
-                        $('#' + i + '-' + prime).css("background-color", "rgba(" + layer0[j][i].r * 255 + "," + layer0[j][i].g * 255 + "," + layer0[j][i].b * 255 + ", 1)");
+                }
+            }
+        } else if (sens == "axialex") {
+            for (var i = 0; i < number; i++) {
+                for (var j = 0; j < number; j++) {
+                    prime = number - 1 - j;
+                    switch (axe) {
+                        case "x" :
+                            setColorEditor(leds[layer][i][prime], $('#' + i + '-' + prime), layer0[i][j]);
+                            break;
+                        case "y" :
+                            setColorEditor(leds[i][layer][prime], $('#' + i + '-' + prime), layer0[i][j]);
+                            break;
+                        case "z" :
+                            setColorEditor(leds[i][prime][layer], $('#' + i + '-' + prime), layer0[i][j]);
+                            break;
+                        default :
+                            break;
+                    }
+                }
+            }
+        } else if (sens == "axialey") {
+            for (var i = 0; i < number; i++) {
+                for (var j = 0; j < number; j++) {
+                    prime = number - 1 - i;
+                    switch (axe) {
+                        case "x" :
+                            setColorEditor(leds[layer][prime][j], $('#' + prime + '-' + j), layer0[i][j]);
+                            break;
+                        case "y" :
+                            setColorEditor(leds[prime][layer][j], $('#' + prime + '-' + j), layer0[i][j]);
+                            break;
+                        case "z" :
+                            setColorEditor(leds[prime][j][layer], $('#' + prime + '-' + j), layer0[i][j]);
+                            break;
+                        default :
+                            break;
                     }
                 }
             }
         }
-    } else if(sens == "gauche") {
-        for(var i=0;i<number;i++) {
-            for(var j=0;j<number;j++) {
-                var prime = number-1-i;
-                if(axe == "x") {
-                    if(layer0[j][i].r == 1 && layer0[j][i].g == 1 && layer0[j][i].b == 1) {
-                        leds[layer][prime][j].turnOff();
-                        $('#' + prime + '-' + j).css("background-color", "");
-                    } else {
-                        leds[layer][prime][j].setColor("rgba(" + layer0[j][i].r * 255 + "," + layer0[j][i].g * 255 + "," + layer0[j][i].b * 255 + ", 1)");
-                        $('#' + prime + '-' + j).css("background-color", "rgba(" + layer0[j][i].r * 255 + "," + layer0[j][i].g * 255 + "," + layer0[j][i].b * 255 + ", 1)");
-                    }
-                } else if(axe == "y") {
-                    if(layer0[j][i].r == 1 && layer0[j][i].g == 1 && layer0[j][i].b == 1) {
-                        leds[prime][layer][j].turnOff();
-                        $('#' + prime + '-' + j).css("background-color", "");
-                    } else {
-                        leds[prime][layer][j].setColor("rgba("+layer0[j][i].r*255+","+layer0[j][i].g*255+"," +layer0[j][i].b*255+", 1)");
-                        $('#' + prime + '-' + j).css("background-color", "rgba(" + layer0[j][i].r * 255 + "," + layer0[j][i].g * 255 + "," + layer0[j][i].b * 255 + ", 1)");
-                    }
-                } else if(axe == "z") {
-                    if(layer0[j][i].r == 1 && layer0[j][i].g == 1 && layer0[j][i].b == 1) {
-                        leds[prime][j][layer].turnOff();
-                        $('#' + prime + '-' + j).css("background-color", "");
-                    } else {
-                        leds[prime][j][layer].setColor("rgba("+layer0[j][i].r*255+","+layer0[j][i].g*255+"," +layer0[j][i].b*255+", 1)");
-                        $('#' + prime + '-' + j).css("background-color", "rgba(" + layer0[j][i].r * 255 + "," + layer0[j][i].g * 255 + "," + layer0[j][i].b * 255 + ", 1)");
-                    }
-                }
-            }
-        }
-    } else if(sens == "axialex") {
-        for(var i=0;i<number;i++) {
-            for(var j=0;j<number;j++) {
-                var prime = number-1-j;
-                if(axe == "x") {
-                    if(layer0[i][j].r == 1 && layer0[i][j].g == 1 && layer0[i][j].b == 1) {
-                        leds[layer][i][prime].turnOff();
-                        $('#' + i + '-' + prime).css("background-color", "");
-                    } else {
-                        leds[layer][i][prime].setColor("rgba(" + layer0[i][j].r * 255 + "," + layer0[i][j].g * 255 + "," + layer0[i][j].b * 255 + ", 1)");
-                        $('#' + i + '-' + prime).css("background-color", "rgba(" + layer0[i][j].r * 255 + "," + layer0[i][j].g * 255 + "," + layer0[i][j].b * 255 + ", 1)");
-                    }
-                } else if(axe == "y") {
-                    if(layer0[i][j].r == 1 && layer0[i][j].g == 1 && layer0[i][j].b == 1) {
-                        leds[i][layer][prime].turnOff();
-                        $('#' + i + '-' + prime).css("background-color", "");
-                    } else {
-                        leds[i][layer][prime].setColor("rgba("+layer0[i][j].r*255+","+layer0[i][j].g*255+"," +layer0[i][j].b*255+", 1)");
-                        $('#' + i + '-' + prime).css("background-color", "rgba(" + layer0[i][j].r * 255 + "," + layer0[i][j].g * 255 + "," + layer0[i][j].b * 255 + ", 1)");
-                    }
-                } else if(axe == "z") {
-                    if(layer0[i][j].r == 1 && layer0[i][j].g == 1 && layer0[i][j].b == 1) {
-                        leds[i][prime][layer].turnOff();
-                        $('#' + i + '-' + prime).css("background-color", "");
-                    } else {
-                        leds[i][prime][layer].setColor("rgba("+layer0[i][j].r*255+","+layer0[i][j].g*255+"," +layer0[i][j].b*255+", 1)");
-                        $('#' + i + '-' + prime).css("background-color", "rgba(" + layer0[i][j].r * 255 + "," + layer0[i][j].g * 255 + "," + layer0[i][j].b * 255 + ", 1)");
-                    }
-                }
-            }
-        }
-    } else if(sens == "axialey") {
-        for(var i=0;i<number;i++) {
-            for(var j=0;j<number;j++) {
-                var prime = number-1-i;
-                if(axe == "x") {
-                    if(layer0[i][j].r == 1 && layer0[i][j].g == 1 && layer0[i][j].b == 1) {
-                        leds[layer][prime][j].turnOff();
-                        $('#' + prime + '-' + j).css("background-color", "");
-                    } else {
-                        leds[layer][prime][j].setColor("rgba(" + layer0[i][j].r * 255 + "," + layer0[i][j].g * 255 + "," + layer0[i][j].b * 255 + ", 1)");
-                        $('#' + prime + '-' + j).css("background-color", "rgba(" + layer0[i][j].r * 255 + "," + layer0[i][j].g * 255 + "," + layer0[i][j].b * 255 + ", 1)");
-                    }
-                } else if(axe == "y") {
-                    if(layer0[i][j].r == 1 && layer0[i][j].g == 1 && layer0[i][j].b == 1) {
-                        leds[prime][layer][j].turnOff();
-                        $('#' + prime + '-' + j).css("background-color", "");
-                    } else {
-                        leds[prime][layer][j].setColor("rgba("+layer0[i][j].r*255+","+layer0[i][j].g*255+"," +layer0[i][j].b*255+", 1)");
-                        $('#' + prime + '-' + j).css("background-color", "rgba(" + layer0[i][j].r * 255 + "," + layer0[i][j].g * 255 + "," + layer0[i][j].b * 255 + ", 1)");
-                    }
-                } else if(axe == "z") {
-                    if(layer0[i][j].r == 1 && layer0[i][j].g == 1 && layer0[i][j].b == 1) {
-                        leds[prime][j][layer].turnOff();
-                        $('#' + prime + '-' + j).css("background-color", "");
-                    } else {
-                        leds[prime][j][layer].setColor("rgba("+layer0[i][j].r*255+","+layer0[i][j].g*255+"," +layer0[i][j].b*255+", 1)");
-                        $('#' + prime + '-' + j).css("background-color", "rgba(" + layer0[i][j].r * 255 + "," + layer0[i][j].g * 255 + "," + layer0[i][j].b * 255 + ", 1)");
-                    }
-                }
-            }
-        }
+    }
+}
+
+// TODO
+function setColorEditor(led, cell, color) {
+    if(color == "") {
+        led.turnOff();
+        cell.css("background-color", "");
+    } else {
+        led.setColor(color);
+        cell.css("background-color", color);
     }
 }
 
@@ -664,6 +669,7 @@ function createSelect(type, pos) {
             select += '<option value="purple">Violet</option>';
             select += '<option value="pink">Rose</option>';
             select += '<option value="brown">Brun</option>';
+            select += '<option value="black">Noir</option>';
             select += '</select>';
             return select;
         case "sens" :
@@ -736,6 +742,42 @@ function clickButtonNewSequence() {
 
     $("#divNewSequence").append('<button id="buttonValidateSeq" onclick="validateSequence()" value=""><a><i class="fa fa-check"></i></a></button>');
     $("#divButtons").append('<input class="buttonsControls" id="buttonCancel" type="button" onclick="printSequences()" value="Annuler" />');
+}
+
+// TODO
+function rgbToString(colorRGB) {
+    switch(colorRGB) {
+        case "rgb(255, 0, 0)" :
+            return "red";
+            break;
+        case "rgb(0, 0, 255)" :
+            return "blue";
+            break;
+        case "rgb(255, 165, 0)" :
+            return "orange";
+            break;
+        case "rgb(255, 255, 0)" :
+            return "yellow";
+            break;
+        case "rgb(0, 128, 0)" :
+            return "green";
+            break;
+        case "rgb(128, 0, 128)" :
+            return "purple";
+            break;
+        case "rgb(255, 192, 203)" :
+            return "pink";
+            break;
+        case "rgb(165, 42, 42)" :
+            return "brown";
+            break;
+        case "rgb(0, 0, 0)" :
+            return "black";
+            break;
+        default :
+            return "";
+            break;
+    }
 }
 
 //Fonction permettant d'afficher une boîte de dialogue de confirmation lors de la supression d'une séquence

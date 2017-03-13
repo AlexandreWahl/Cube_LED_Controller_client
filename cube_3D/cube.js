@@ -31,6 +31,7 @@ function init() {
     // Le renderer permet d'afficher la scère
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(w, h);
+    scene.background = new THREE.Color("#5d6168");
     // Ajout du renderer à la div dédiée à cet effet
     $("#divCubeLED").append(renderer.domElement);
 
