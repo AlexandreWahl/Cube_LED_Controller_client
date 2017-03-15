@@ -1,8 +1,5 @@
-var ip = "157.26.174.167";
-
 // Chemin vers le dossier contenant les fichier PHP
-var path = "http://" + ip + "/Cube_LED_Controller_srv/";
-
+var path = "/Cube_LED/php/";
 
 /**********************************************************************************************************************/
 
@@ -23,7 +20,7 @@ function reqGetFonctions() {
 function reqGetSequences() {
     return $.ajax({
         url: path + "reqGetSequences.php",
-        type: "POST",
+        type: 'POST',
         error: function() {
             alert('Erreur lors de l\éxécution de la requête');
         }
